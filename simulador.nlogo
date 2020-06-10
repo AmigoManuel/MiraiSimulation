@@ -23,31 +23,32 @@ end
 
 ;;Crea una conexion entre las tortugas a y b
 to connection
-  let a random population
-  let b random population
-  if a != b[
-    if [color] of turtle a = gray and [color] of turtle b = gray [
-      ask turtle a [
-        create-link-with turtle b[
+  let src random population
+  let dst random population
+  if src != dst [
+    if [color] of turtle src = gray or [color] of turtle src = green [
+      ask turtle src [
+        create-link-to turtle dst[
           set color green
           set shape "connection-link"
         ]
         set color green
-        ask turtle b[
+      ]
+      if [color] of turtle dst = gray [
+        ask turtle dst [
           set color green
         ]
       ]
     ]
-    if [color] of turtle a = red [
-      ask turtle a [
-        create-link-with turtle b[
+    if [color] of turtle src = red [
+      ask turtle src[
+        create-link-to turtle dst[
           set color red
           set shape "connection-link"
         ]
+      ]
+      ask turtle dst [
         set color red
-        ask turtle b[
-          set color red
-        ]
       ]
     ]
   ]
@@ -60,14 +61,16 @@ to disconnection
     ask my-links[
       die
     ]
-    set color gray
+    if [color] of turtle a = green[
+      set color gray
+    ]
   ]
 end
 
 to go
   ask turtles[
     connection
-    disconnection
+    ;;disconnection
   ]
   tick
 end
@@ -142,7 +145,7 @@ population
 population
 0
 100
-99.0
+20.0
 1
 1
 NIL
@@ -655,13 +658,13 @@ Line -7500403 true 150 150 210 180
 
 connection-link
 1.0
--0.2 0 0.0 1.0
+-0.2 1 2.0 2.0
 0.0 1 1.0 0.0
-0.2 0 0.0 1.0
+0.2 1 2.0 2.0
 link direction
 true
 0
-Polygon -7500403 true true 105 180 150 105 195 180 165 180 150 165 135 180 105 180
+Polygon -7500403 true true 90 180 150 90 210 180 165 180 150 165 135 180 90 180
 @#$#@#$#@
 0
 @#$#@#$#@

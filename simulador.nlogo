@@ -1,23 +1,50 @@
 globals[
   shape-list
+  vulnerable-shapes
 ]
 
-to setup
-  clear-all
-  reset-ticks
+;;Setea las referencias a dispositivos y dispositivos vulnerables
+to setup-devices
+  ;;Lista de dispositivos disponibles
+  set shape-list ["tv" "speaker" "router" "printer" "consola" "phone" "lavadora" "fridge" "notebook" "camera"]
+  ;;Configuraciones de dispositivos vulnerables
+  if vulnerable-devices = "all"[
+    set vulnerable-shapes shape-list
+  ]
+  if vulnerable-devices = "mirai infection"[
+    set vulnerable-shapes ["router" "camera"]
+  ]
+  if vulnerable-devices = "all IoT devices"[
+    set vulnerable-shapes ["tv" "speaker" "router" "printer" "lavadora" "fridge" "camera"]
+  ]
+end
+
+;;Setea los dispositivos en pantalla
+to setup-turtles
   create-turtles population
   ask turtles[
+    ;;Setea un dispositivo para la tortuga
     set shape random-shape
     set size 1.5
     set color gray
     setxy -15 + random 30 -15 + random 30
   ]
-  ask turtle 0 [ set color red ]
+  ;;Comienza con la tortuga 0 infectada
+  ask turtle 0 [
+    set color red
+    set shape one-of vulnerable-shapes
+  ]
+end
+
+to setup
+  clear-all
+  reset-ticks
+  setup-devices
+  setup-turtles
 end
 
 ;;Determina una forma aleatoria para la tortuga
 to-report random-shape
-  set shape-list ["tv" "speaker" "router" "printer" "consola" "phone" "lavadora" "fridge" "notebook" "camera"]
   report one-of shape-list
 end
 
@@ -46,8 +73,11 @@ to make-connection[src dst]
         set shape "connection-link"
       ]
     ]
-    ask turtle dst [
-      set color red
+    ;;Si el dispositivo se encuentra en los dispositivos vulnerables infecta
+    if member? [shape] of turtle dst vulnerable-shapes[
+      ask turtle dst [
+        set color red
+      ]
     ]
   ]
 end
@@ -77,8 +107,8 @@ end
 
 to go
   ask turtles[
-    ;;Lanza una moneda para saber si conectar o desconectarse
-    let moneda random 2
+    ;;Lanza una moneda para saber si conectar, desconectarse o conservar estado actual
+    let moneda random 3
     if moneda = 0 [
       connection
     ]
@@ -90,9 +120,9 @@ to go
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-208
+11
 10
-803
+606
 606
 -1
 -1
@@ -117,9 +147,9 @@ ticks
 30.0
 
 BUTTON
-9
+629
 10
-72
+692
 43
 setup
 setup
@@ -134,9 +164,9 @@ NIL
 1
 
 BUTTON
-77
+697
 10
-140
+802
 43
 go
 go
@@ -151,19 +181,48 @@ NIL
 1
 
 SLIDER
-10
+630
 49
-182
+802
 82
 population
 population
 2
 500
-250.0
+132.0
 1
 1
 NIL
 HORIZONTAL
+
+PLOT
+631
+89
+1081
+348
+propagation
+tick
+cantidad de tortugas
+0.0
+50.0
+0.0
+500.0
+true
+true
+"" ""
+PENS
+"infected devices" 1.0 0 -2674135 true "" "plot count turtles with [color = red]"
+"regular devices" 1.0 0 -11085214 true "" "plot count turtles with [color = green]"
+
+CHOOSER
+809
+10
+928
+55
+vulnerable-devices
+vulnerable-devices
+"mirai infection" "all IoT devices" "all"
+2
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -672,9 +731,9 @@ Line -7500403 true 150 150 210 180
 
 connection-link
 1.0
--0.2 1 2.0 2.0
-0.0 1 1.0 0.0
-0.2 1 2.0 2.0
+-0.2 0 0.0 1.0
+0.0 1 4.0 4.0 2.0 2.0
+0.2 0 0.0 1.0
 link direction
 true
 0

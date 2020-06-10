@@ -21,12 +21,10 @@ to-report random-shape
   report one-of shape-list
 end
 
-;;Crea una conexion entre las tortugas a y b
-to connection
-  let src random population
-  let dst random population
-  if src != dst [
-    if [color] of turtle src = gray or [color] of turtle src = green [
+;;Realiza una conexión entre src y dst
+to make-connection[src dst]
+  ;;Si src no se encuentra infectado
+  if [color] of turtle src = gray or [color] of turtle src = green [
       ask turtle src [
         create-link-to turtle dst[
           set color green
@@ -40,28 +38,38 @@ to connection
         ]
       ]
     ]
-    if [color] of turtle src = red [
-      ask turtle src[
-        create-link-to turtle dst[
-          set color red
-          set shape "connection-link"
-        ]
-      ]
-      ask turtle dst [
+  ;;Si src si se encuentra infectado se lanza el ataque
+  if [color] of turtle src = red [
+    ask turtle src[
+      create-link-to turtle dst[
         set color red
+        set shape "connection-link"
       ]
+    ]
+    ask turtle dst [
+      set color red
     ]
   ]
 end
 
-;;Borra las conexiones de la tortuga a
+;;Determina si es posible una concexión entre src y dst
+to connection
+  let src random population
+  let dst random population
+  if src != dst [
+    ;;Realiza la conexión entre src y dst
+    make-connection src dst
+  ]
+end
+
+;;Borra todas las conexiones de la tortuga src
 to disconnection
-  let a random population
-  ask turtle a[
+  let src random population
+  ask turtle src[
     ask my-links[
       die
     ]
-    if [color] of turtle a = green[
+    if [color] of turtle src = green[
       set color gray
     ]
   ]
@@ -69,8 +77,14 @@ end
 
 to go
   ask turtles[
-    connection
-    ;;disconnection
+    ;;Lanza una moneda para saber si conectar o desconectarse
+    let moneda random 2
+    if moneda = 0 [
+      connection
+    ]
+    if moneda = 1 [
+      disconnection
+    ]
   ]
   tick
 end
@@ -143,9 +157,9 @@ SLIDER
 82
 population
 population
-0
-100
-20.0
+2
+500
+250.0
 1
 1
 NIL

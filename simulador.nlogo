@@ -1,6 +1,7 @@
 globals[
   shape-list
   vulnerable-shapes
+  routers
 ]
 
 ;;Setea las referencias a dispositivos y dispositivos vulnerables
@@ -23,22 +24,53 @@ end
 to setup-turtles
   create-turtles population
   ask turtles[
+    let me self
     ;;Setea un dispositivo para la tortuga
     set shape random-shape
     set size 1.5
     set color gray
-    setxy -15 + random 30 -15 + random 30
+    ;setxy -15 + random 30 -15 + random 30
+    if shape = "router"[
+      setxy -15 + random 30 -15 + random 30
+      set routers lput me routers
+    ]
   ]
-  ;;Comienza con la tortuga 0 infectada
-  ask turtle 0 [
+  ;;Ubica los dispositivos no routers cercanos a uno
+  ask turtles with[shape != "router"][
+    ;;Identifica el router del hogar
+    let my-router one-of routers
+    ;;Determina sus coordenadas cartesianas
+    let pos_x [xcor] of my-router
+    let pos_y [ycor] of my-router
+    ;;Mediante coordenadas polares ubica los dispositivos en el hogar
+    let r 3
+    let angle random 360
+    setxy pos_x + r * sin angle pos_y + r * cos angle
+    ;;Crea la conexión de los dispositivos con el router
+    create-link-with my-router
+  ]
+  ;;Conecta los routers entre si
+  ask turtles with[shape = "router"][
+    let me self
+    let bro-router one-of routers
+    loop[
+      if me != bro-router[
+        create-link-with bro-router
+        stop
+      ]
+      set bro-router one-of routers
+    ]
+  ]
+  ;;Comienza con uno de los routers infectados
+  ask one-of routers [
     set color red
-    set shape one-of vulnerable-shapes
   ]
 end
 
 to setup
   clear-all
   reset-ticks
+  set routers []
   setup-devices
   setup-turtles
 end
@@ -53,14 +85,16 @@ to make-connection[src dst]
   ;;Si src no se encuentra infectado
   if [color] of turtle src = gray or [color] of turtle src = green [
       ask turtle src [
-        create-link-to turtle dst[
+        ;lo ideal es dejar funcionando el to
+        ;create-link-to turtle dst[
+        create-link-with dst[
           set color green
           set shape "connection-link"
         ]
         set color green
       ]
-      if [color] of turtle dst = gray [
-        ask turtle dst [
+      if [color] of dst = gray [
+        ask dst [
           set color green
         ]
       ]
@@ -68,14 +102,16 @@ to make-connection[src dst]
   ;;Si src si se encuentra infectado se lanza el ataque
   if [color] of turtle src = red [
     ask turtle src[
-      create-link-to turtle dst[
+      ;lo ideal es dejar funcionando el to
+      ;create-link-to turtle dst[
+      create-link-with dst[
         set color red
         set shape "connection-link"
       ]
     ]
     ;;Si el dispositivo se encuentra en los dispositivos vulnerables infecta
-    if member? [shape] of turtle dst vulnerable-shapes[
-      ask turtle dst [
+    if member? [shape] of dst vulnerable-shapes[
+      ask dst [
         set color red
       ]
     ]
@@ -85,9 +121,15 @@ end
 ;;Determina si es posible una concexión entre src y dst
 to connection
   let src random population
-  let dst random population
-  if src != dst [
-    ;;Realiza la conexión entre src y dst
+  ;let dst random population
+  ;;Realiza la conexión entre src y dst
+  let dst 0
+  ;;Busca un dispositivo alcanzable desde src
+  ask turtle src[
+    let my-link one-of my-links
+    ask my-link[
+      set dst other-end
+    ]
     make-connection src dst
   ]
 end
@@ -96,7 +138,7 @@ end
 to disconnection
   let src random population
   ask turtle src[
-    ask my-links[
+    ask my-links with[shape = "connection-link"][
       die
     ]
     if [color] of turtle src = green[
@@ -170,7 +212,7 @@ BUTTON
 43
 go
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -188,8 +230,8 @@ SLIDER
 population
 population
 2
-500
-132.0
+1000
+1000.0
 1
 1
 NIL
@@ -206,23 +248,24 @@ cantidad de tortugas
 0.0
 50.0
 0.0
-500.0
+200.0
 true
 true
 "" ""
 PENS
 "infected devices" 1.0 0 -2674135 true "" "plot count turtles with [color = red]"
-"regular devices" 1.0 0 -11085214 true "" "plot count turtles with [color = green]"
+"regular devices connected" 1.0 0 -11085214 true "" "plot count turtles with [color = green]"
+"regular devices disconnected" 1.0 0 -7500403 true "" "plot count turtles with [color = gray]"
 
 CHOOSER
-809
-10
-928
-55
+631
+355
+750
+400
 vulnerable-devices
 vulnerable-devices
 "mirai infection" "all IoT devices" "all"
-2
+0
 
 @#$#@#$#@
 ## WHAT IS IT?

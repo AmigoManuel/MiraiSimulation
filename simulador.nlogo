@@ -7,13 +7,13 @@ globals[
 ;;Setea las referencias a dispositivos y dispositivos vulnerables
 to setup-devices
   ;;Lista de dispositivos disponibles
-  set shape-list ["tv" "speaker" "router" "printer" "consola" "phone" "lavadora" "fridge" "notebook" "camera"]
+  set shape-list ["tv" "speaker" "router" "printer" "consola" "phone" "lavadora" "fridge" "notebook" "camera" "dvr"]
   ;;Configuraciones de dispositivos vulnerables
   if vulnerable-devices = "all"[
     set vulnerable-shapes shape-list
   ]
   if vulnerable-devices = "mirai infection"[
-    set vulnerable-shapes ["router" "camera"]
+    set vulnerable-shapes ["router" "camera" "dvr"]
   ]
   if vulnerable-devices = "all IoT devices"[
     set vulnerable-shapes ["tv" "speaker" "router" "printer" "lavadora" "fridge" "camera"]
@@ -27,7 +27,7 @@ to setup-turtles
     let me self
     ;;Setea un dispositivo para la tortuga
     set shape random-shape
-    set size 1.5
+    set size 2
     set color gray
     ;setxy -15 + random 30 -15 + random 30
     if shape = "router"[
@@ -87,7 +87,7 @@ to make-connection[src dst]
       ask turtle src [
         ;lo ideal es dejar funcionando el to
         ;create-link-to turtle dst[
-        create-link-with dst[
+        ask link-with dst[
           set color green
           set shape "connection-link"
         ]
@@ -104,7 +104,7 @@ to make-connection[src dst]
     ask turtle src[
       ;lo ideal es dejar funcionando el to
       ;create-link-to turtle dst[
-      create-link-with dst[
+      ask link-with dst[
         set color red
         set shape "connection-link"
       ]
@@ -115,6 +115,7 @@ to make-connection[src dst]
         set color red
       ]
     ]
+    ;;Aqui abria que retornar el link a la normalidad en el else? ya que fallo
   ]
 end
 
@@ -139,9 +140,10 @@ to disconnection
   let src random population
   ask turtle src[
     ask my-links with[shape = "connection-link"][
-      die
+      set color gray
+      set shape "default"
     ]
-    if [color] of turtle src = green[
+    if color = green[
       set color gray
     ]
   ]
@@ -231,7 +233,7 @@ population
 population
 2
 1000
-1000.0
+472.0
 1
 1
 NIL
@@ -258,14 +260,50 @@ PENS
 "regular devices disconnected" 1.0 0 -7500403 true "" "plot count turtles with [color = gray]"
 
 CHOOSER
-631
-355
-750
-400
+1093
+89
+1212
+134
 vulnerable-devices
 vulnerable-devices
 "mirai infection" "all IoT devices" "all"
 0
+
+BUTTON
+811
+10
+874
+43
+1 tick
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+632
+356
+1081
+605
+connections
+NIL
+NIL
+0.0
+50.0
+0.0
+200.0
+true
+true
+"" ""
+PENS
+"safe connections" 1.0 0 -13840069 true "" "plot count links with[color = green]"
+"unsafe connections" 1.0 0 -2674135 true "" "plot count links with[color = red]"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -413,6 +451,21 @@ dot
 false
 0
 Circle -7500403 true true 90 90 120
+
+dvr
+false
+0
+Rectangle -7500403 true true 15 165 285 225
+Polygon -7500403 true true 15 165 45 120 255 120 285 165 15 165
+Line -16777216 false 15 165 285 165
+Polygon -1 true false 225 180 210 195 225 210 225 180
+Polygon -1 true false 255 180 255 210 270 195 255 180
+Polygon -1 true false 225 180 240 165 255 180 225 180
+Polygon -1 true false 225 210 240 225 255 210 225 210
+Circle -1 true false 225 180 30
+Rectangle -1 true false 165 180 195 195
+Rectangle -1 true false 120 180 150 195
+Rectangle -1 true false 75 180 105 195
 
 face happy
 false
@@ -773,7 +826,7 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 connection-link
-1.0
+0.0
 -0.2 0 0.0 1.0
 0.0 1 4.0 4.0 2.0 2.0
 0.2 0 0.0 1.0

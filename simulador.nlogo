@@ -1,173 +1,117 @@
 globals[
   shape-list
-  vulnerable-shapes
-  routers
+  vulnerable_devices
+  device_list
 ]
 
-;;Setea las referencias a dispositivos y dispositivos vulnerables
-to setup-devices
-  ;;Lista de dispositivos disponibles
-  set shape-list ["tv" "speaker" "router" "printer" "consola" "phone" "lavadora" "fridge" "notebook" "camera" "dvr"]
-  ;;Configuraciones de dispositivos vulnerables
-  if vulnerable-devices = "all"[
-    set vulnerable-shapes shape-list
-  ]
-  if vulnerable-devices = "mirai infection"[
-    set vulnerable-shapes ["router" "camera" "dvr"]
-  ]
-  if vulnerable-devices = "all IoT devices"[
-    set vulnerable-shapes ["tv" "speaker" "router" "printer" "lavadora" "fridge" "camera"]
-  ]
-end
-
-;;Setea los dispositivos en pantalla
-to setup-turtles
-  create-turtles population
-  ask turtles[
-    let me self
-    ;;Setea un dispositivo para la tortuga
-    set shape random-shape
-    set size 2
-    set color gray
-    ;setxy -15 + random 30 -15 + random 30
-    if shape = "router"[
-      setxy -15 + random 30 -15 + random 30
-      set routers lput me routers
-    ]
-  ]
-  ;;Ubica los dispositivos no routers cercanos a uno
-  ask turtles with[shape != "router"][
-    ;;Identifica el router del hogar
-    let my-router one-of routers
-    ;;Determina sus coordenadas cartesianas
-    let pos_x [xcor] of my-router
-    let pos_y [ycor] of my-router
-    ;;Mediante coordenadas polares ubica los dispositivos en el hogar
-    let r 3
-    let angle random 360
-    setxy pos_x + r * sin angle pos_y + r * cos angle
-    ;;Crea la conexión de los dispositivos con el router
-    create-link-with my-router
-  ]
-  ;;Conecta los routers entre si
-  ask turtles with[shape = "router"][
-    let me self
-    let bro-router one-of routers
-    loop[
-      if me != bro-router[
-        create-link-with bro-router
-        stop
-      ]
-      set bro-router one-of routers
-    ]
-  ]
-  ;;Comienza con uno de los routers infectados
-  ask one-of routers [
-    set color red
-  ]
-end
+;;Clases para mejor entendimiento
+breed [routers router]
+breed [devices device]
 
 to setup
   clear-all
   reset-ticks
-  set routers []
+  identify-devices
+  setup-routers
   setup-devices
-  setup-turtles
 end
 
-;;Determina una forma aleatoria para la tortuga
-to-report random-shape
-  report one-of shape-list
-end
-
-;;Realiza una conexión entre src y dst
-to make-connection[src dst]
-  ;;Si src no se encuentra infectado
-  if [color] of turtle src = gray or [color] of turtle src = green [
-      ask turtle src [
-        ;lo ideal es dejar funcionando el to
-        ;create-link-to turtle dst[
-        ask link-with dst[
-          set color green
-          set shape "connection-link"
-        ]
-        set color green
-      ]
-      if [color] of dst = gray [
-        ask dst [
-          set color green
-        ]
-      ]
-    ]
-  ;;Si src si se encuentra infectado se lanza el ataque
-  if [color] of turtle src = red [
-    ask turtle src[
-      ;lo ideal es dejar funcionando el to
-      ;create-link-to turtle dst[
-      ask link-with dst[
-        set color red
-        set shape "connection-link"
-      ]
-    ]
-    ;;Si el dispositivo se encuentra en los dispositivos vulnerables infecta
-    if member? [shape] of dst vulnerable-shapes[
-      ask dst [
-        set color red
-      ]
-    ]
-    ;;Aqui abria que retornar el link a la normalidad en el else? ya que fallo
+;;Identifica los dispositivos potencialmente vulnerables
+;;Según el tipo de ataque
+to identify-devices
+  ;;Lista de dispositivos IoT disponibles
+  set device_list ["tv" "speaker" "printer" "consola" "phone" "lavadora" "fridge" "notebook" "camera" "dvr"]
+  ;;Configuraciones de dispositivos vulnerables
+  if infection_type = "all"[
+    set vulnerable_devices device_list
+  ]
+  if infection_type = "mirai infection"[
+    set vulnerable_devices ["router" "camera" "dvr"]
+  ]
+  if infection_type = "all IoT devices"[
+    set vulnerable_devices ["tv" "speaker" "router" "printer" "lavadora" "fridge" "camera"]
   ]
 end
 
-;;Determina si es posible una concexión entre src y dst
-to connection
-  let src random population
-  ;let dst random population
-  ;;Realiza la conexión entre src y dst
-  let dst 0
-  ;;Busca un dispositivo alcanzable desde src
-  ask turtle src[
-    let my-link one-of my-links
-    ask my-link[
-      set dst other-end
+;;Inicializa los routers
+to setup-routers
+  create-routers n_routers
+  ask routers[
+    let me self
+
+    set size 1
+    set shape "router"
+    set color gray
+
+    setxy -15 + random 30 -15 + random 30
+
+    ;;Marca el dispositivo como seguro
+    set label "seguro"
+    ;;Según su probabilidad de vulnerabilidad
+    ;;determina si es vulnerable o no
+    if random-float 1 < prob_vulnerability[
+      set label "vulnerable"
     ]
-    make-connection src dst
+
+    ;;Conexión con otros routers
+    ;;La cantidad de conexiones que tenga
+    ;;la lee desde el slider
+    repeat 1 + random max_router_connection[
+      let other_router one-of routers
+      while[other_router = me][
+        set other_router one-of routers
+      ]
+      create-link-with other_router
+      ]
+    ]
+    ;let other_router one-of routers
+    ;reate-link-with other_router
+end
+
+;;Inicializa los dispositivos
+;;Estos se asocian a un router
+to setup-devices
+  create-devices n_devices
+  ask devices[
+    set size 1
+    set color gray
+    set shape random_shape
+
+    let local_router one-of routers
+
+    ;;Posciciona los dispositivos
+    let pos_x [xcor] of local_router
+    let pos_y [ycor] of local_router
+    let r 3
+    let angle random 360
+    setxy pos_x + r * sin angle pos_y + r * cos angle
+    create-link-with local_router
+
+    ;;Marca el dispositivo como seguro
+    set label "seguro"
+    ;;Si es un dispositivo potencialmente vulnerable
+    if member? shape vulnerable_devices[
+      ;;Según su probabilidad de vulnerabilidad
+      ;;determina si es vulnerable o no
+      if random-float 1 < prob_vulnerability[
+        set label "vulnerable"
+      ]
+    ]
   ]
 end
 
-;;Borra todas las conexiones de la tortuga src
-to disconnection
-  let src random population
-  ask turtle src[
-    ask my-links with[shape = "connection-link"][
-      set color gray
-      set shape "default"
-    ]
-    if color = green[
-      set color gray
-    ]
-  ]
+to-report random_shape
+  report one-of device_list
 end
 
 to go
-  ask turtles[
-    ;;Lanza una moneda para saber si conectar, desconectarse o conservar estado actual
-    let moneda random 3
-    if moneda = 0 [
-      connection
-    ]
-    if moneda = 1 [
-      disconnection
-    ]
-  ]
-  tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 11
 10
-606
-606
+748
+748
 -1
 -1
 17.8
@@ -180,10 +124,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-20
+20
+-20
+20
 0
 0
 1
@@ -191,9 +135,9 @@ ticks
 30.0
 
 BUTTON
-629
+757
 10
-692
+820
 43
 setup
 setup
@@ -208,9 +152,9 @@ NIL
 1
 
 BUTTON
-697
+825
 10
-802
+930
 43
 go
 go
@@ -225,85 +169,74 @@ NIL
 1
 
 SLIDER
-630
+758
 49
-802
+930
 82
-population
-population
-2
-1000
-472.0
+n_routers
+n_routers
+10
+100
+50.0
 1
 1
 NIL
 HORIZONTAL
 
-PLOT
-631
-89
-1081
-348
-propagation
-tick
-cantidad de tortugas
-0.0
-50.0
-0.0
-200.0
-true
-true
-"" ""
-PENS
-"infected devices" 1.0 0 -2674135 true "" "plot count turtles with [color = red]"
-"regular devices connected" 1.0 0 -11085214 true "" "plot count turtles with [color = green]"
-"regular devices disconnected" 1.0 0 -7500403 true "" "plot count turtles with [color = gray]"
+SLIDER
+759
+94
+931
+127
+n_devices
+n_devices
+100
+1000
+186.0
+1
+1
+NIL
+HORIZONTAL
 
 CHOOSER
-1093
-89
-1212
-134
-vulnerable-devices
-vulnerable-devices
+758
+140
+934
+185
+infection_type
+infection_type
 "mirai infection" "all IoT devices" "all"
 0
 
-BUTTON
-811
-10
-874
-43
-1 tick
-go
-NIL
+SLIDER
+758
+197
+935
+230
+prob_vulnerability
+prob_vulnerability
+0
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
+0.5
+0.01
 1
+NIL
+HORIZONTAL
 
-PLOT
-632
-356
-1081
-605
-connections
+SLIDER
+760
+241
+935
+274
+max_router_connection
+max_router_connection
+1
+10
+6.0
+1
+1
 NIL
-NIL
-0.0
-50.0
-0.0
-200.0
-true
-true
-"" ""
-PENS
-"safe connections" 1.0 0 -13840069 true "" "plot count links with[color = green]"
-"unsafe connections" 1.0 0 -2674135 true "" "plot count links with[color = red]"
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

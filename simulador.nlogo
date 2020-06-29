@@ -1,5 +1,4 @@
 globals[
-  shape-list
   vulnerable_devices
   device_list
 ]
@@ -7,11 +6,13 @@ globals[
 ;;Clases para mejor entendimiento
 breed [routers router]
 breed [devices device]
+breed [servers server]
 
 to setup
   clear-all
   reset-ticks
   identify-devices
+  setup-servers
   setup-routers
   setup-devices
 end
@@ -30,6 +31,27 @@ to identify-devices
   ]
   if infection_type = "all IoT devices"[
     set vulnerable_devices ["tv" "speaker" "router" "printer" "lavadora" "fridge" "camera"]
+  ]
+end
+
+to setup-servers
+  create-servers 3
+  ask servers[
+    set size 2
+    set color gray
+    set shape "computer workstation"
+    setxy -100 100
+  ]
+  ask server 0[
+    set label "CnC"
+  ]
+  ask server 1[
+    set label "report"
+    set xcor 108
+  ]
+  ask server 2[
+    set label "loader"
+    set xcor 111
   ]
 end
 
@@ -75,7 +97,7 @@ to setup-devices
   ask devices[
     set size 1
     set color gray
-    set shape random_shape
+    set shape random-shape
 
     let local_router one-of routers
 
@@ -100,12 +122,56 @@ to setup-devices
   ]
 end
 
-to-report random_shape
+
+to-report random-shape
   report one-of device_list
 end
 
 to go
+  connection-procedure
+  tick
 end
+
+to connection-procedure
+  ask devices [
+    let moneda random 3
+    if moneda = 0 [
+      connection devices
+    ]
+    if moneda = 1 [
+      disconnection devices
+    ]
+  ]
+  ask routers [
+    let moneda random 3
+    if moneda = 0 [
+      connection routers
+    ]
+    if moneda = 1 [
+      disconnection routers
+    ]
+  ]
+end
+
+to connection[param]
+  let src one-of param
+  ask src[
+    ask one-of my-links[
+      set color green
+    ]
+  ]
+end
+
+to disconnection[param]
+  let src one-of param
+  ask src[
+    ask one-of my-links[
+      set color gray
+    ]
+  ]
+end
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 11
@@ -177,7 +243,7 @@ n_routers
 n_routers
 10
 100
-50.0
+28.0
 1
 1
 NIL
@@ -192,7 +258,7 @@ n_devices
 n_devices
 100
 1000
-186.0
+238.0
 1
 1
 NIL
@@ -232,7 +298,7 @@ max_router_connection
 max_router_connection
 1
 10
-6.0
+3.0
 1
 1
 NIL
@@ -351,6 +417,16 @@ false
 0
 Circle -7500403 true true 0 0 300
 Circle -16777216 true false 30 30 240
+
+computer workstation
+false
+0
+Rectangle -7500403 true true 60 45 240 180
+Polygon -7500403 true true 90 180 105 195 135 195 135 210 165 210 165 195 195 195 210 180
+Rectangle -16777216 true false 75 60 225 165
+Rectangle -7500403 true true 45 210 255 255
+Rectangle -10899396 true false 249 223 237 217
+Line -16777216 false 60 225 120 225
 
 consola
 false

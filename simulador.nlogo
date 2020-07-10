@@ -15,6 +15,11 @@ to setup
   setup-servers
   setup-routers
   setup-devices
+
+  ask router 4 [
+    set color red
+  ]
+
 end
 
 ;;Identifica los dispositivos potencialmente vulnerables
@@ -128,8 +133,18 @@ to-report random-shape
 end
 
 to go
-  connection-procedure
-  tick
+  ask one-of routers [
+    ask my-links[
+      show myself
+    ]
+  ]
+  ;connection-procedure
+  ;check-reports
+  ;tick
+end
+
+to check-reports
+
 end
 
 to connection-procedure
@@ -155,9 +170,33 @@ end
 
 to connection[param]
   let src one-of param
-  ask src[
-    ask one-of my-links[
+  if [color] of src != red [
+    ask src[
+      let lik one-of my-links
+      ask lik [
+        set color green
+        if [color] of other-end != red [
+          set color green
+        ]
+      ]
       set color green
+    ]
+  ]
+  if [color] of src = red [
+    ask src[
+      let lik one-of my-links
+      ask lik [
+        if other-end != server 1 [
+          set color red
+        ]
+        if [color] of other-end != red [
+          ask src [
+            create-link-with server 1 [
+              set color yellow
+            ]
+          ]
+        ]
+      ]
     ]
   ]
 end
@@ -165,12 +204,19 @@ end
 to disconnection[param]
   let src one-of param
   ask src[
-    ask one-of my-links[
+    let lik one-of my-links
+    ask lik[
+      if other-end != server 1 [
+        if [color] of other-end != red [
+          set color gray
+        ]
+      ]
+    ]
+    if color != red [
       set color gray
     ]
   ]
 end
-
 
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -224,7 +270,7 @@ BUTTON
 43
 go
 go
-T
+NIL
 1
 T
 OBSERVER
@@ -243,7 +289,7 @@ n_routers
 n_routers
 10
 100
-28.0
+24.0
 1
 1
 NIL
@@ -258,7 +304,7 @@ n_devices
 n_devices
 100
 1000
-238.0
+192.0
 1
 1
 NIL

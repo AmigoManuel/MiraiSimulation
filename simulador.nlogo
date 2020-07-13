@@ -3,7 +3,7 @@ globals[
   device_list
 ]
 
-;;Clases para mejor entendimiento
+;; Clases para mejor entendimiento
 breed [routers router]
 breed [devices device]
 breed [servers server]
@@ -19,11 +19,14 @@ to setup
   ask router 4 [
     set color red
   ]
+  ask router 10 [
+    set color red
+  ]
 
 end
 
-;;Identifica los dispositivos potencialmente vulnerables
-;;Según el tipo de ataque
+;; Identifica los dispositivos potencialmente vulnerables
+;; Según el tipo de ataque
 to identify-devices
   ;;Lista de dispositivos IoT disponibles
   set device_list ["tv" "speaker" "printer" "consola" "phone" "lavadora" "fridge" "notebook" "camera" "dvr"]
@@ -60,7 +63,7 @@ to setup-servers
   ]
 end
 
-;;Inicializa los routers
+;; Inicializa los routers
 to setup-routers
   create-routers n_routers
   ask routers[
@@ -72,17 +75,17 @@ to setup-routers
 
     setxy -15 + random 30 -15 + random 30
 
-    ;;Marca el dispositivo como seguro
+    ;; Marca el dispositivo como seguro
     set label "seguro"
-    ;;Según su probabilidad de vulnerabilidad
-    ;;determina si es vulnerable o no
+    ;; Según su probabilidad de vulnerabilidad
+    ;; determina si es vulnerable o no
     if random-float 1 < prob_vulnerability[
       set label "vulnerable"
     ]
 
-    ;;Conexión con otros routers
-    ;;La cantidad de conexiones que tenga
-    ;;la lee desde el slider
+    ;; Conexión con otros routers
+    ;; La cantidad de conexiones que tenga
+    ;; la lee desde el slider
     repeat 1 + random max_router_connection[
       let other_router one-of routers
       while[other_router = me][
@@ -91,12 +94,10 @@ to setup-routers
       create-link-with other_router
       ]
     ]
-    ;let other_router one-of routers
-    ;reate-link-with other_router
 end
 
-;;Inicializa los dispositivos
-;;Estos se asocian a un router
+;; Inicializa los dispositivos
+;; Estos se asocian a un router
 to setup-devices
   create-devices n_devices
   ask devices[
@@ -106,7 +107,7 @@ to setup-devices
 
     let local_router one-of routers
 
-    ;;Posciciona los dispositivos
+    ;; Posciciona los dispositivos
     let pos_x [xcor] of local_router
     let pos_y [ycor] of local_router
     let r 3
@@ -114,12 +115,12 @@ to setup-devices
     setxy pos_x + r * sin angle pos_y + r * cos angle
     create-link-with local_router
 
-    ;;Marca el dispositivo como seguro
+    ;; Marca el dispositivo como seguro
     set label "seguro"
-    ;;Si es un dispositivo potencialmente vulnerable
+    ;; Si es un dispositivo potencialmente vulnerable
     if member? shape vulnerable_devices[
-      ;;Según su probabilidad de vulnerabilidad
-      ;;determina si es vulnerable o no
+      ;; Según su probabilidad de vulnerabilidad
+      ;; determina si es vulnerable o no
       if random-float 1 < prob_vulnerability[
         set label "vulnerable"
       ]
@@ -133,18 +134,33 @@ to-report random-shape
 end
 
 to go
-  ask one-of routers [
-    ask my-links[
-      show myself
-    ]
-  ]
-  ;connection-procedure
-  ;check-reports
-  ;tick
+  ;; Procedimientos de conexión en la red
+  connection-procedure
+  ;; Obtiene los reportes de vulnerables
+  let reports check-reports
+  ;; Carga infección en vulnerables
+  load-worm reports
+  tick
 end
 
-to check-reports
+to load-worm [ reports ]
+  show reports
+end
 
+to-report check-reports
+  ;; Lista con dispositivos reportados
+  let reports []
+  ask server 1 [
+    ;; Pregunta si tiene links
+    if any? my-links[
+      ;; Le dice a sus links
+      ask my-links [
+        ;; Que se guarden en reports los vulnerables
+        set reports lput other-end reports
+      ]
+    ]
+  ]
+  report reports
 end
 
 to connection-procedure
@@ -169,30 +185,40 @@ to connection-procedure
 end
 
 to connection[param]
+  ;; Selecciona un nodo de origen
   let src one-of param
+  ;; Si no esta infectado sigue este proceso
   if [color] of src != red [
     ask src[
       let lik one-of my-links
       ask lik [
-        set color green
         if [color] of other-end != red [
-          set color green
+          if other-end != server 1[
+            set color green
+          ]
         ]
       ]
       set color green
     ]
   ]
+  ;; Si esta infectado sigue este proceso
   if [color] of src = red [
     ask src[
       let lik one-of my-links
       ask lik [
+        ;; Identifica un link de ataque en rojo
         if other-end != server 1 [
           set color red
         ]
+        ;; Si el nodo de destino no esta infectado
         if [color] of other-end != red [
-          ask src [
-            create-link-with server 1 [
-              set color yellow
+          ;; Y este es vulnerable
+          if [label] of other-end = "vulnerable"[
+            ;; Crea un enlace con el servidor de reporte
+            ask other-end [
+              create-link-with server 1 [
+                set color yellow
+              ]
             ]
           ]
         ]
@@ -217,7 +243,6 @@ to disconnection[param]
     ]
   ]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 11
@@ -270,7 +295,7 @@ BUTTON
 43
 go
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -329,7 +354,7 @@ prob_vulnerability
 prob_vulnerability
 0
 1
-0.5
+0.75
 0.01
 1
 NIL

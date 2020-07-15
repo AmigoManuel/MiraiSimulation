@@ -1,3 +1,11 @@
+;; Por hacer
+;; Ya que la infección se propaga unicamente entre los dispositivos cercanos
+;; si se da el caso de que entre los cercanos no exista ninguno vulnerable
+;; entonces no se propaga, lo cual resulta extraño poco real en un contexto
+;; como el tratado, por lo cual hay que buscar una manera que se propague igualmente
+;; en el caso que se de esta situación o cambiar la menera en que se realizan
+;; las conexiones a conexiones más extensas, no tan solo a los cercanos.
+
 globals[
   vulnerable_devices
   device_list
@@ -15,11 +23,21 @@ to setup
   setup-servers
   setup-routers
   setup-devices
+  setup-infection
+end
 
-  ask router 4 [
+;; Dispositivos iniciales que cuentan con la infección
+to setup-infection
+  ask n-of initial_devices_infected devices [
+    ask self [
+      set label "vulnerable"
+    ]
     set color red
   ]
-  ask router 10 [
+  ask n-of initial_routers_infected routers [
+    ask self [
+      set label "vulnerable"
+    ]
     set color red
   ]
 end
@@ -323,7 +341,7 @@ n_routers
 n_routers
 10
 100
-94.0
+100.0
 1
 1
 NIL
@@ -363,7 +381,7 @@ prob_vulnerability
 prob_vulnerability
 0
 1
-0.75
+0.64
 0.01
 1
 NIL
@@ -378,6 +396,36 @@ max_router_connection
 max_router_connection
 1
 10
+3.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+762
+283
+934
+316
+initial_devices_infected
+initial_devices_infected
+0
+20
+3.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+760
+326
+937
+359
+initial_routers_infected
+initial_routers_infected
+0
+20
 3.0
 1
 1

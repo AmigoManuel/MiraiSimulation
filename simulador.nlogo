@@ -22,7 +22,6 @@ to setup
   ask router 10 [
     set color red
   ]
-
 end
 
 ;; Identifica los dispositivos potencialmente vulnerables
@@ -144,7 +143,17 @@ to go
 end
 
 to load-worm [ reports ]
-  show reports
+  foreach reports [
+    [victim] ->
+    ask server 2 [
+      create-link-with victim [
+        set color yellow
+        ask other-end [
+          set color red
+        ]
+      ]
+    ]
+  ]
 end
 
 to-report check-reports
@@ -193,7 +202,7 @@ to connection[param]
       let lik one-of my-links
       ask lik [
         if [color] of other-end != red [
-          if other-end != server 1[
+          if other-end != server 1 and other-end != server 2 [
             set color green
           ]
         ]
@@ -207,7 +216,7 @@ to connection[param]
       let lik one-of my-links
       ask lik [
         ;; Identifica un link de ataque en rojo
-        if other-end != server 1 [
+        if other-end != server 1 and other-end != server 2 [
           set color red
         ]
         ;; Si el nodo de destino no esta infectado
@@ -232,7 +241,7 @@ to disconnection[param]
   ask src[
     let lik one-of my-links
     ask lik[
-      if other-end != server 1 [
+      if other-end != server 1 and other-end != server 2 [
         if [color] of other-end != red [
           set color gray
         ]
@@ -314,7 +323,7 @@ n_routers
 n_routers
 10
 100
-24.0
+94.0
 1
 1
 NIL
@@ -329,7 +338,7 @@ n_devices
 n_devices
 100
 1000
-192.0
+1000.0
 1
 1
 NIL

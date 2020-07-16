@@ -1,10 +1,5 @@
 ;; Por hacer
-;; Ya que la infección se propaga unicamente entre los dispositivos cercanos
-;; si se da el caso de que entre los cercanos no exista ninguno vulnerable
-;; entonces no se propaga, lo cual resulta extraño poco real en un contexto
-;; como el tratado, por lo cual hay que buscar una manera que se propague igualmente
-;; en el caso que se de esta situación o cambiar la menera en que se realizan
-;; las conexiones a conexiones más extensas, no tan solo a los cercanos.
+;; Ordenar el codigo, añadir metricas y documentar
 
 globals[
   vulnerable_devices
@@ -166,6 +161,7 @@ to load-worm [ reports ]
     ask server 2 [
       create-link-with victim [
         set color yellow
+        if not show_loader_links? [hide-link]
         ask other-end [
           set color red
         ]
@@ -192,28 +188,28 @@ end
 
 to connection-procedure
   ask devices [
+    let src one-of devices
     let moneda random 3
     if moneda = 0 [
-      connection devices
+      connection src
     ]
     if moneda = 1 [
-      disconnection devices
+      disconnection src
     ]
   ]
   ask routers [
+    let src one-of routers
     let moneda random 3
     if moneda = 0 [
-      connection routers
+      connection src
     ]
     if moneda = 1 [
-      disconnection routers
+      disconnection src
     ]
   ]
 end
 
-to connection[param]
-  ;; Selecciona un nodo de origen
-  let src one-of param
+to connection[src]
   ;; Si no esta infectado sigue este proceso
   if [color] of src != red [
     ask src[
@@ -222,6 +218,7 @@ to connection[param]
         if [color] of other-end != red [
           if other-end != server 1 and other-end != server 2 [
             set color green
+            connection-recurse src connection_len "seguro"
           ]
         ]
       ]
@@ -236,26 +233,59 @@ to connection[param]
         ;; Identifica un link de ataque en rojo
         if other-end != server 1 and other-end != server 2 [
           set color red
-        ]
-        ;; Si el nodo de destino no esta infectado
-        if [color] of other-end != red [
-          ;; Y este es vulnerable
-          if [label] of other-end = "vulnerable"[
-            ;; Crea un enlace con el servidor de reporte
-            ask other-end [
-              create-link-with server 1 [
-                set color yellow
-              ]
-            ]
-          ]
+          connection-recurse other-end connection_len "vulnerable"
         ]
       ]
     ]
   ]
 end
 
-to disconnection[param]
-  let src one-of param
+to connection-recurse[src recurse tag]
+  set recurse recurse - 1
+  if recurse > 0 [
+    if tag = "seguro" [
+      ask src [
+        let lik one-of my-links
+        ask lik [
+          if [color] of other-end != red [
+            if other-end != server 1 and other-end != server 2 [
+              set color green
+              connection-recurse other-end recurse tag
+            ]
+          ]
+        ]
+      ]
+    ]
+    if tag = "vulnerable" [
+      ask src [
+        let lik one-of my-links
+        ask lik [
+          if [color] of other-end != red [
+            if other-end != server 1 and other-end != server 2 [
+              set color red
+              connection-recurse src recurse tag
+            ]
+          ]
+        ]
+      ]
+    ]
+  ]
+  if recurse = 0 [
+    if tag = "vulnerable"[
+    if [label] of other-end = "vulnerable" [
+      ;; Crea un enlace con el servidor de reporte
+      ask other-end [
+        create-link-with server 1 [
+          set color yellow
+          if not show_report_links? [hide-link]
+        ]
+      ]
+    ]
+    ]
+  ]
+end
+
+to disconnection[src]
   ask src[
     let lik one-of my-links
     ask lik[
@@ -341,7 +371,7 @@ n_routers
 n_routers
 10
 100
-100.0
+10.0
 1
 1
 NIL
@@ -356,7 +386,7 @@ n_devices
 n_devices
 100
 1000
-1000.0
+100.0
 1
 1
 NIL
@@ -370,7 +400,7 @@ CHOOSER
 infection_type
 infection_type
 "mirai infection" "all IoT devices" "all"
-0
+1
 
 SLIDER
 758
@@ -381,7 +411,7 @@ prob_vulnerability
 prob_vulnerability
 0
 1
-0.64
+0.53
 0.01
 1
 NIL
@@ -411,7 +441,7 @@ initial_devices_infected
 initial_devices_infected
 0
 20
-3.0
+1.0
 1
 1
 NIL
@@ -426,11 +456,95 @@ initial_routers_infected
 initial_routers_infected
 0
 20
-3.0
+0.0
 1
 1
 NIL
 HORIZONTAL
+
+SLIDER
+759
+365
+939
+398
+connection_len
+connection_len
+1
+3
+2.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+971
+50
+1034
+83
+NIL
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+TEXTBOX
+974
+19
+1124
+37
+Debug
+11
+0.0
+1
+
+SWITCH
+971
+94
+1140
+127
+show_report_links?
+show_report_links?
+0
+1
+-1000
+
+SWITCH
+972
+138
+1141
+171
+show_loader_links?
+show_loader_links?
+0
+1
+-1000
+
+PLOT
+763
+408
+1188
+748
+Devices/Routers status
+ticks
+devices and routers
+0.0
+300.0
+0.0
+300.0
+true
+true
+"" ""
+PENS
+"not connected" 1.0 0 -7500403 true "" "plot count turtles with [color = gray]"
+"not infected" 1.0 0 -13840069 true "" "plot count turtles with [color = green]"
+"infected" 1.0 0 -2674135 true "" "plot count turtles with [color = red]"
 
 @#$#@#$#@
 ## WHAT IS IT?

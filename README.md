@@ -5,6 +5,7 @@ MiraiSimulation es una simulación sobre la propagación del malware Mirai, este
 ### Requisitos 🔧
 
 [Netlogo](https://ccl.northwestern.edu/netlogo/6.1.1/) instalado en tu equipo.
+
 [simulador.nlogo](https://raw.githubusercontent.com/AmigoManuel/MiraiSimulation/master/simulador.nlogo) código fuente de la simulación.
 
 ### Ejecución 💻

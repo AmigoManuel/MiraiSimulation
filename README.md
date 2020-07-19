@@ -1,16 +1,16 @@
 # MiraiSimulation 📢
 
-MiraiSimulation is a simulation about the propagation of Mirai malware, this malware is destinated to create botnets with IoT devices and make DDOS attacks.
+MiraiSimulation es una simulación sobre la propagación del malware Mirai, este malware es destinado a crear Botnets con dispositivos IoT y realizar ataques DDOS.
 
-## Requirements 🔧
+### Requisitos 🔧
 
-[Netlogo](https://ccl.northwestern.edu/netlogo/6.1.1/) installed on your pc or [NetLogo Web](www.netlogoweb.org/launch)
+[Netlogo](https://ccl.northwestern.edu/netlogo/6.1.1/) instalado en tu equipo.
 
-## Usage 💻
+### Ejecución 💻
 
-Load [simulador.nlogo](https://github.com/AmigoManuel/MiraiSimulation/blob/master/simulador.nlogo) on NetLogo, press Setup button and then press Go button to simulate Mirai malware propagation.
+Cargar [simulador.nlogo](https://github.com/AmigoManuel/MiraiSimulation/blob/master/simulador.nlogo) en NetLogo, presionar el botón Setup y luego presionar el botón Go para simular la propagación del malware.
 
-For more information about the simulation parameters visit the [Wiki](https://github.com/AmigoManuel/MiraiSimulation/wiki)
+Para más información acerca de los parametros de la simulación visitar la [Wiki](https://github.com/AmigoManuel/MiraiSimulation/wiki)
 
 ## License 🎓
 

@@ -427,7 +427,7 @@ n_routers
 n_routers
 10
 100
-10.0
+100.0
 1
 1
 NIL
@@ -442,7 +442,7 @@ n_devices
 n_devices
 100
 1000
-100.0
+1000.0
 1
 1
 NIL
@@ -497,7 +497,7 @@ initial_devices_infected
 initial_devices_infected
 0
 20
-1.0
+3.0
 1
 1
 NIL
@@ -512,7 +512,7 @@ initial_routers_infected
 initial_routers_infected
 0
 20
-0.0
+3.0
 1
 1
 NIL
@@ -527,7 +527,7 @@ connection_len
 connection_len
 1
 3
-1.0
+2.0
 1
 1
 NIL
@@ -567,7 +567,7 @@ SWITCH
 105
 show_report_links?
 show_report_links?
-1
+0
 1
 -1000
 
@@ -578,7 +578,7 @@ SWITCH
 140
 show_loader_links?
 show_loader_links?
-1
+0
 1
 -1000
 
@@ -611,7 +611,7 @@ prob_reset
 prob_reset
 0
 1
-0.0
+1.0
 0.1
 1
 NIL

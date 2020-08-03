@@ -170,6 +170,8 @@ to go
   load-worm reports
   ;; Determina los resets
   reset-procedure
+  ;; Reinfección
+  reinfection-procedure
   tick
 end
 
@@ -214,15 +216,30 @@ to load-worm [ reported ]
         if member? other-end fixed_devices[
           set reinfected_count reinfected_count + 1
         ]
-        ;die
       ]
     ]
-    ;ask victim [
-    ;  set color red
-    ;  if member? self fixed_devices[
-    ;    set reinfected_count reinfected_count + 1
-    ;  ]
-    ;]
+  ]
+end
+
+to reinfection-procedure
+  if not empty? fixed_devices[
+    let moneda random-float 1
+    if moneda < prob_reinfection[
+      ask one-of fixed_devices[
+        set color red
+        set reinfected_count reinfected_count + 1
+      ]
+    ]
+  ]
+end
+
+to reinfection
+  foreach fixed_devices [
+    [victim] ->
+    ask victim [
+      set color red
+      set reinfected_count reinfected_count + 1
+    ]
   ]
 end
 
@@ -427,7 +444,7 @@ n_routers
 n_routers
 10
 100
-10.0
+100.0
 1
 1
 NIL
@@ -435,14 +452,14 @@ HORIZONTAL
 
 SLIDER
 758
-95
+94
 935
-128
+127
 n_devices
 n_devices
 100
 1000
-100.0
+1000.0
 1
 1
 NIL
@@ -450,9 +467,9 @@ HORIZONTAL
 
 CHOOSER
 758
-129
+127
 935
-174
+172
 infection_type
 infection_type
 "mirai infection" "all IoT devices" "all"
@@ -460,74 +477,74 @@ infection_type
 
 SLIDER
 758
-175
+172
 935
-208
+205
 prob_vulnerability
 prob_vulnerability
 0
 1
-0.53
+0.83
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-759
-209
+758
+205
 935
-242
+238
 max_router_connection
 max_router_connection
 1
 10
-6.0
+5.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-759
-243
+758
+238
 935
-276
+271
 initial_devices_infected
 initial_devices_infected
 0
 20
-1.0
+3.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-760
-277
-936
-310
+758
+271
+935
+304
 initial_routers_infected
 initial_routers_infected
 0
 20
-0.0
+2.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-760
-311
-936
-344
+758
+304
+935
+337
 connection_len
 connection_len
 1
 3
-1.0
+2.0
 1
 1
 NIL
@@ -561,10 +578,10 @@ Debug
 1
 
 SWITCH
-959
-72
+958
+69
 1128
-105
+102
 show_report_links?
 show_report_links?
 1
@@ -572,10 +589,10 @@ show_report_links?
 -1000
 
 SWITCH
-959
-107
+958
+102
 1128
-140
+135
 show_loader_links?
 show_loader_links?
 1
@@ -583,9 +600,9 @@ show_loader_links?
 -1000
 
 PLOT
-763
+758
 408
-1188
+1183
 748
 Devices/Routers status
 ticks
@@ -603,25 +620,25 @@ PENS
 "infected" 1.0 0 -2674135 true "" "plot count turtles with [color = red]"
 
 SLIDER
-760
-345
-936
-378
+758
+337
+935
+370
 prob_reset
 prob_reset
 0
 1
-0.0
+0.5
 0.1
 1
 NIL
 HORIZONTAL
 
 PLOT
-946
-228
-1146
-378
+940
+254
+1141
+403
 resets_count
 NIL
 NIL
@@ -634,6 +651,38 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot resets_count"
+
+BUTTON
+1023
+34
+1128
+67
+NIL
+reinfection
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+758
+370
+935
+403
+prob_reinfection
+prob_reinfection
+0
+1
+0.8
+0.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
